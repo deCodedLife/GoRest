@@ -1,0 +1,13 @@
+{
+  "title": "Кондиционеры",
+  "table": "conditioners",
+  "params": [
+    {
+      "title": "Идентификатор",
+      "article": "id",
+      "type": "int",
+      "null": "NO",
+      "default": ""
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "title": "Типы кондиционеров",
+  "table": "conditioners_types",
+  "params": [
+    {
+      "title": "Идентификатор",
+      "article": "id",
+      "type": "int",
+      "null": "NO",
+      "default": ""
+    }
+  ]
+}
