@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"path/filepath"
+	"strconv"
 )
 
 type SchemaParam struct {
@@ -30,25 +32,34 @@ func (s Schema) Parse() {
 	API.Path = s.Table
 
 	API.Handler = func(w http.ResponseWriter, r *http.Request) {
-		SendData(w, 200, fmt.Sprintf("[%s] GET method works fine!", s.Table))
+		SendData(w, http.StatusOK, fmt.Sprintf("[%s] GET method works fine!", s.Table))
 	}
 	API.Method = http.MethodGet
 	handlers = append(handlers, API)
 
 	API.Handler = func(w http.ResponseWriter, r *http.Request) {
-		SendData(w, 200, fmt.Sprintf("[%s] POST method works fine", s.Table))
+		SendData(w, http.StatusOK, fmt.Sprintf("[%s] POST method works fine", s.Table))
 	}
 	API.Method = http.MethodPost
 	handlers = append(handlers, API)
 
+	API.Path = s.Table + "/{id}"
 	API.Handler = func(w http.ResponseWriter, r *http.Request) {
-		SendData(w, 200, fmt.Sprintf("[%s] DELETE method works fine", s.Table))
+		vars := mux.Vars(r)
+
+		defer recover()
+
+		conditionerID, err := strconv.Atoi( vars["id"] )
+		HandleError(err, CustomError{}.WebError(w, http.StatusForbidden, err))
+
+		SendData(w, http.StatusOK, fmt.Sprintf("[%d] was deleted", conditionerID))
 	}
 	API.Method = http.MethodDelete
 	handlers = append(handlers, API)
 
+	API.Path = s.Table
 	API.Handler = func(w http.ResponseWriter, r *http.Request) {
-		SendData(w, 200, fmt.Sprintf("[%s] PUT method works fine", s.Table))
+		SendData(w, http.StatusOK, fmt.Sprintf("[%s] PUT method works fine", s.Table))
 	}
 	API.Method = http.MethodPut
 	handlers = append(handlers, API)
@@ -61,7 +72,6 @@ func construct() {
 	HandleError(err, CustomError{}.Unxepected(err))
 
 	for _, file := range filesList {
-
 		var dbSchema Schema
 
 		byteData, err := ioutil.ReadFile(filepath.Join(SchemaDir, file.Name()))
@@ -71,11 +81,13 @@ func construct() {
 		HandleError(err, CustomError{}.Unxepected(err))
 
 		dbSchema.Parse()
+		dbSchema.InitTable()
 	}
 
 	r := mux.NewRouter()
 
 	for _, api := range handlers {
+		log.Println(api.Method + " /" + api.Path)
 		r.HandleFunc("/" + api.Path, api.Handler).Methods(api.Method)
 	}
 
