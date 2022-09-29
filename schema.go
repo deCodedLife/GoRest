@@ -68,6 +68,9 @@ func (s Schema) Parse() {
 
 func construct() {
 
+	DBConfig.init()
+	InitDatabase()
+
 	filesList, err := ioutil.ReadDir(SchemaDir)
 	HandleError(err, CustomError{}.Unxepected(err))
 

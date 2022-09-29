@@ -8,6 +8,13 @@
       "type": "int",
       "null": "NO",
       "default": ""
+    },
+    {
+      "title": "Тип кондиционера",
+      "article": "type",
+      "type": "varchar(256)",
+      "null": "NO",
+      "default": ""
     }
   ]
 }

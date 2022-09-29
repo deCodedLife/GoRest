@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"strings"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 var database *sql.DB
@@ -40,40 +43,69 @@ func (db *DBConfigs) init() {
 
 func (s Schema) InitTable() {
 
-	var queryParams []interface{}
-	var paramsDetails = ""
-
-	queryParams = append(queryParams, s.Table)
+	var query = ""
 
 	for _, param := range s.Params {
 
-		paramsDetails += "?\t?\t?"
-
-		queryParams = append(queryParams, param.Article)
-		queryParams = append(queryParams, param.Type)
+		query += fmt.Sprintf("`%s` ", param.Article)
+		query += param.Type + " "
 
 		if param.Null == "NO" {
-			queryParams = append(queryParams, "NOT NULL")
+			query += "NOT NULL"
 		} else {
-			queryParams = append(queryParams, "NULL")
+			query += "NULL"
 		}
 
 		if param.Default != "" {
-			paramsDetails += "DEFAULT(?)"
-			queryParams = append(queryParams, param.Default)
+			query += " "
+			paramPart1 := strings.Split(param.Type, "bit")
+			paramPart2 := strings.Split(param.Type, "int")
+
+			if len(paramPart1) > 1 || len(paramPart2) > 1 {
+				query += fmt.Sprintf("DEFAULT %s", param.Default)
+			} else {
+				query += fmt.Sprintf("DEFAULT '%s'", param.Default)
+			}
 		}
 
+		query += ", "
 	}
 
-	smtp, err := database.Prepare(fmt.Sprintf("CREATE TABLE IF NOT EXISTS ? (%s)", paramsDetails))
+	query = query[:len(query) - 2]
+	query = fmt.Sprintf("CREATE TABLE IF NOT EXISTS `%s` (%s)", s.Table, query)
+
+	smtp, err := database.Prepare(query)
 	HandleError(err, CustomError{}.Unxepected(err))
 
-	_, err = smtp.Exec(queryParams)
+	_, err = smtp.Exec()
 	HandleError(err, CustomError{}.Unxepected(err))
 }
 
-func (s Schema) INSERT () int {
-	return 0
+func (s Schema) INSERT () int64 {
+	var columns = ""
+	var values = ""
+	var queryParams []interface{}
+
+	for _, param := range s.Params {
+
+		columns = "?,"
+		values = "?,"
+
+		queryParams = append(queryParams, param.Article)
+
+	}
+
+	columns = columns[:len(columns) - 1]
+	values = values[:len(values) - 1]
+
+	stmp, err := database.Prepare(fmt.Sprintf("INSERT INTO ? (%s) VALUES", columns, values))
+	HandleError(err, CustomError{}.Unxepected(err))
+
+	data, err := stmp.Exec(queryParams)
+	HandleError(err, CustomError{}.Unxepected(err))
+
+	insertedID, err := data.LastInsertId()
+	return insertedID
 }
 
 func (s Schema) SELECT () interface{} {
