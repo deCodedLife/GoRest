@@ -26,7 +26,6 @@ type Schema struct {
 }
 
 func (s Schema) Parse() {
-
 	var API RestApi
 
 	API.Path = s.Table
@@ -63,12 +62,10 @@ func (s Schema) Parse() {
 	}
 	API.Method = http.MethodPut
 	handlers = append(handlers, API)
-
 }
 
 func construct() {
-
-	DBConfig.init()
+	DBConfig.Init()
 	InitDatabase()
 
 	filesList, err := ioutil.ReadDir(SchemaDir)

@@ -33,7 +33,7 @@ type DBConfigs struct {
 	DBPassword string `json:"db_password"`
 }
 
-func (db *DBConfigs) init() {
+func (db *DBConfigs) Init() {
 	byteText, err := ioutil.ReadFile(DBConfigFile)
 	HandleError(err, CustomError{}.Unxepected(err))
 
