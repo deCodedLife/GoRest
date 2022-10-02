@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
 	"io/ioutil"
@@ -48,6 +49,26 @@ func (s SchemaParam) IsNumeric() bool {
 	return false
 }
 
+func (s Schema) ValidateParams(d map[string]interface{}) error {
+	for _, param := range s.Params {
+
+		if param.Null != "NO" || strings.ToLower(param.Article) == "id" {
+			continue
+		}
+
+		if param.Default != "" {
+			continue
+		}
+
+		if d[param.Article] == nil {
+			return errors.New(fmt.Sprintf("%s is required", param.Article))
+		}
+
+	}
+
+	return nil
+}
+
 func (s Schema) Parse() {
 	var API RestApi
 
@@ -65,29 +86,13 @@ func (s Schema) Parse() {
 
 		defer func() {
 			recover()
-
-			//HandleError(errors.New(err.(string)), CustomError{}.Unxepected(errors.New(err.(string))))
 		}()
 
 		err := json.NewDecoder(r.Body).Decode(&userRequest)
 		HandleError(err, CustomError{}.WebError(w, 401, err))
 
-		for _, param := range s.Params {
-
-			if param.Null != "NO" || strings.ToLower(param.Article) == "id" {
-				continue
-			}
-
-			if param.Default != "" {
-				continue
-			}
-
-			if userRequest[param.Article] == nil {
-				SendData(w, 401, fmt.Sprintf("%s is required", param.Article))
-				return
-			}
-
-		}
+		err = s.ValidateParams(userRequest)
+		HandleError(err, CustomError{}.WebError(w, 401, err))
 
 		id, err := s.INSERT(userRequest)
 		HandleError(err, CustomError{}.WebError(w, 501, err))
