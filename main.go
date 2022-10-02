@@ -18,12 +18,12 @@ type RestApi struct {
 }
 
 type CustomError struct {
-	StatusCode int `json:"status_code"`
+	StatusCode int32 `json:"status_code"`
 	Handler    func()
 }
 
 type Response struct {
-	StatusCode int         `json:"status_code"`
+	StatusCode int32       `json:"status_code"`
 	Data       interface{} `json:"data"`
 }
 
@@ -36,12 +36,12 @@ func (c CustomError) Unxepected(err error) CustomError {
 		}}
 }
 
-func (c CustomError) WebError(w http.ResponseWriter, s int, err error) CustomError {
-	SendData(w, s, err.Error())
+func (c CustomError) WebError(w http.ResponseWriter, s int32, err error) CustomError {
 
 	return CustomError{
 		s,
 		func() {
+			SendData(w, s, err.Error())
 			panic(err.Error())
 		},
 	}
@@ -51,8 +51,8 @@ func PrintLog(t string, s string, d interface{}) {
 	log.Println(fmt.Sprintf("[%s] %s: \"%s\"", t, s, d.(string)))
 }
 
-func SendData(w http.ResponseWriter, s int, d interface{}) {
-	w.WriteHeader(s)
+func SendData(w http.ResponseWriter, s int32, d interface{}) {
+
 	w.Header().Set("Content-Type", "application/json")
 
 	var response Response
