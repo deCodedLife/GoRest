@@ -2,10 +2,10 @@
 
 ## GO REST
 It's a powerful tool for deploying your database for REST api.
-All what you need is a schema of your database.
+All what you need is a schema of your database!
 
-This project automatically creates tables from raw json files handles GET, POST, 
-PUT and DELETE methods for them 
+This project automatically creates tables from raw json files and handles GET, POST, 
+PUT, DELETE methods for them 
 
 ---
 
@@ -35,7 +35,7 @@ go build
 ```shell script
 mkdir schema
 ```
-* Create files which describes a schema of your database
+* Create files which describe a schema of your database
 ```json5
 {
   "title": "Test table",          // Table description
@@ -44,7 +44,7 @@ mkdir schema
     {
       "title": "Identification",  // Column description
       "article": "id",            // Column name
-      "type": "int",              // Column type (same as database)
+      "type": "int",              // Column type (same as database types)
       "null": "NO",               // Can be null
       "default": ""               // Default column value
     },
@@ -52,12 +52,15 @@ mkdir schema
   ]
 }
 ```
-*You can set max length of column value using type like `int(11)` <br>
-`null` parameter can be only `Yes` or `No`* 
-* After you can launch your application
+*You can set max length of column value using type like `int(11)`. You should put only `YES` or `NO` in a `null
+` parameter* 
+* Launch your application!
 
 ---
 
 ### Todo
-- [ ] Handle GET POST PUT and DELETE methods
+- [X] Handle POST method
+- [ ] Handle GET method
+- [ ] Handle PUT method
+- [ ] Handle DELETE methods
 - [ ] Clean up code
