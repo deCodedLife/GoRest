@@ -1,20 +1,22 @@
-package main
+package database
 
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
+
+	. "backend/tool"
 )
 
 var database *sql.DB
+var DBConfig = DBConfigs{"", "", "", ""}
 
 const DBConfigFile = "dbSettings.json"
-
-var DBConfig = DBConfigs{"", "", "", ""}
 
 func InitDatabase() {
 	var err error
@@ -26,13 +28,6 @@ func InitDatabase() {
 
 	database, err = sql.Open("mysql", login)
 	HandleError(err, CustomError{}.Unxepected(err))
-}
-
-type DBConfigs struct {
-	DBPath     string `json:"db_path"`
-	DBDatabase string `json:"db_database"`
-	DBUsername string `json:"db_username"`
-	DBPassword string `json:"db_password"`
 }
 
 func (db *DBConfigs) Init() {
@@ -169,4 +164,47 @@ func (s Schema) UPDATE() bool {
 
 func (s Schema) DELETE() bool {
 	return false
+}
+
+func (s SchemaParam) IsNumeric() bool {
+	if len(strings.Split(s.Type, "bit")) > 1 {
+		return true
+	}
+	if len(strings.Split(s.Type, "bool")) > 1 {
+		return true
+	}
+	if len(strings.Split(s.Type, "int")) > 1 {
+		return true
+	}
+	if len(strings.Split(s.Type, "float")) > 1 {
+		return true
+	}
+	if len(strings.Split(s.Type, "double")) > 1 {
+		return true
+	}
+	if len(strings.Split(s.Type, "dec")) > 1 {
+		return true
+	}
+
+	return false
+}
+
+func (s Schema) ValidateParams(d map[string]interface{}) error {
+	for _, param := range s.Params {
+
+		if param.Null != "NO" || strings.ToLower(param.Article) == "id" {
+			continue
+		}
+
+		if param.Default != "" {
+			continue
+		}
+
+		if d[param.Article] == nil {
+			return errors.New(fmt.Sprintf("%s is required", param.Article))
+		}
+
+	}
+
+	return nil
 }

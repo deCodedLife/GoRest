@@ -1,75 +1,19 @@
-package main
+package rest
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
 	"strconv"
-	"strings"
+
+	. "backend/database"
+	. "backend/tool"
 )
 
-type SchemaParam struct {
-	Title   string `json:"title"`
-	Article string `json:"article"`
-	Type    string `json:"type"`
-	Null    string `json:"null"`
-	Default string `json:"default"`
-}
-
-type Schema struct {
-	Title  string        `json:"title"`
-	Table  string        `json:"table"`
-	Params []SchemaParam `json:"params"`
-}
-
-func (s SchemaParam) IsNumeric() bool {
-	if len(strings.Split(s.Type, "bit")) > 1 {
-		return true
-	}
-	if len(strings.Split(s.Type, "bool")) > 1 {
-		return true
-	}
-	if len(strings.Split(s.Type, "int")) > 1 {
-		return true
-	}
-	if len(strings.Split(s.Type, "float")) > 1 {
-		return true
-	}
-	if len(strings.Split(s.Type, "double")) > 1 {
-		return true
-	}
-	if len(strings.Split(s.Type, "dec")) > 1 {
-		return true
-	}
-
-	return false
-}
-
-func (s Schema) ValidateParams(d map[string]interface{}) error {
-	for _, param := range s.Params {
-
-		if param.Null != "NO" || strings.ToLower(param.Article) == "id" {
-			continue
-		}
-
-		if param.Default != "" {
-			continue
-		}
-
-		if d[param.Article] == nil {
-			return errors.New(fmt.Sprintf("%s is required", param.Article))
-		}
-
-	}
-
-	return nil
-}
-
-func (s Schema) Parse() {
+func HandleRest(s Schema) {
 	var API RestApi
 
 	API.Path = s.Table
@@ -78,7 +22,7 @@ func (s Schema) Parse() {
 
 	}
 	API.Method = http.MethodGet
-	handlers = append(handlers, API)
+	Handlers = append(Handlers, API)
 
 	API.Path = s.Table
 	API.Handler = func(w http.ResponseWriter, r *http.Request) {
@@ -100,7 +44,7 @@ func (s Schema) Parse() {
 		SendData(w, 200, id)
 	}
 	API.Method = http.MethodPost
-	handlers = append(handlers, API)
+	Handlers = append(Handlers, API)
 
 	API.Path = s.Table + "/{id}"
 	API.Handler = func(w http.ResponseWriter, r *http.Request) {
@@ -114,17 +58,17 @@ func (s Schema) Parse() {
 		SendData(w, http.StatusOK, fmt.Sprintf("[%d] was deleted", conditionerID))
 	}
 	API.Method = http.MethodDelete
-	handlers = append(handlers, API)
+	Handlers = append(Handlers, API)
 
 	API.Path = s.Table
 	API.Handler = func(w http.ResponseWriter, r *http.Request) {
 		SendData(w, http.StatusOK, fmt.Sprintf("[%s] PUT method works fine", s.Table))
 	}
 	API.Method = http.MethodPut
-	handlers = append(handlers, API)
+	Handlers = append(Handlers, API)
 }
 
-func construct() {
+func Construct() {
 	DBConfig.Init()
 	InitDatabase()
 
@@ -140,13 +84,13 @@ func construct() {
 		err = json.Unmarshal(byteData, &dbSchema)
 		HandleError(err, CustomError{}.Unxepected(err))
 
-		dbSchema.Parse()
+		HandleRest(dbSchema)
 		dbSchema.InitTable()
 	}
 
 	r := mux.NewRouter()
 
-	for _, api := range handlers {
+	for _, api := range Handlers {
 		r.HandleFunc("/"+api.Path, api.Handler).Methods(api.Method)
 	}
 
