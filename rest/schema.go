@@ -2,6 +2,7 @@ package rest
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
 	"io/ioutil"
@@ -73,7 +74,11 @@ func HandleRest(s Schema) {
 				}()
 
 				id, err := strconv.Atoi(vars["id"])
-				HandleError(err, CustomError{}.WebError(w, http.StatusNotAcceptable, err))
+				HandleError(err, CustomError{}.WebError(
+					w,
+					http.StatusNotAcceptable,
+					errors.New("not allowed"),
+				))
 
 				rowsAffected, err := s.DELETE(id)
 				HandleError(err, CustomError{}.WebError(w, http.StatusInternalServerError, err))
@@ -96,9 +101,13 @@ func HandleRest(s Schema) {
 				}()
 
 				id, err := strconv.Atoi(vars["id"])
-				HandleError(err, CustomError{}.WebError(w, http.StatusNotAcceptable, err))
+				HandleError(err, CustomError{}.WebError(
+					w,
+					http.StatusNotAcceptable,
+					errors.New("not allowed"),
+				))
 
-				json.NewDecoder(r.Body).Decode(userRequest)
+				err = json.NewDecoder(r.Body).Decode(&userRequest)
 				HandleError(err, CustomError{}.WebError(w, http.StatusNotAcceptable, err))
 
 				rowsAffected, err := s.UPDATE(id, userRequest)

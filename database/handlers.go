@@ -38,7 +38,6 @@ func (db *DBConfigs) Init() {
 }
 
 func (s Schema) InitTable() {
-
 	var additional = ""
 	var query = ""
 
@@ -151,7 +150,6 @@ func (s Schema) INSERT(d map[string]interface{}) (int64, error) {
 }
 
 func (s Schema) SELECT(d map[string]interface{}) ([]map[string]interface{}, error) {
-
 	var response []map[string]interface{}
 	var responsePointers = make([]interface{}, len(s.Params))
 	var responseColumns = make([]interface{}, len(s.Params))
@@ -217,8 +215,47 @@ func (s Schema) SELECT(d map[string]interface{}) ([]map[string]interface{}, erro
 }
 
 func (s Schema) UPDATE(id int, d map[string]interface{}) (map[string]interface{}, error) {
+	var setClause = ""
+
+	for _, param := range s.Params {
+
+		if d[param.Article] == nil {
+			continue
+		}
+
+		if param.IsNumeric() {
+			setClause += fmt.Sprintf("`%s` = %v, ", param.Article, d[param.Article])
+			continue
+		}
+
+		setClause += fmt.Sprintf("`%s` = '%s', ", param.Article, d[param.Article])
+
+	}
+
+	if setClause == "" {
+		return nil, errors.New("not allowed")
+	}
+
+	setClause = setClause[:len(setClause)-2]
+
+	query := fmt.Sprintf("UPDATE %s SET %s WHERE id = %d", s.Table, setClause, id)
+	stmt, err := database.Prepare(query)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := stmt.Exec()
+	if err != nil {
+		return nil, err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return nil, err
+	}
+
 	return map[string]interface{}{
-		"rowsAffected": 1,
+		"rowsAffected": rowsAffected,
 	}, nil
 }
 

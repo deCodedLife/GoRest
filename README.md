@@ -69,4 +69,4 @@ mkdir schema
 - [X] Handle POST method
 - [X] Handle GET method
 - [X] Handle DELETE methods
-- [ ] Handle PUT method
+- [X] Handle PUT method
