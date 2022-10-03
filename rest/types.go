@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-const SchemaDir = "rest"
+const SchemaDir = "schema"
 
 var Handlers []RestApi
 

@@ -7,7 +7,9 @@ import (
 	"net/http"
 )
 
-func (c CustomError) Unxepected(err error) CustomError {
+const DBConfigFile = "dbSettings.json"
+
+func (c CustomError) Unexpected(err error) CustomError {
 	return CustomError{
 		500,
 		func() {
@@ -40,7 +42,7 @@ func SendData(w http.ResponseWriter, s int32, d interface{}) {
 	response.Data = d
 
 	err := json.NewEncoder(w).Encode(response)
-	HandleError(err, CustomError{}.Unxepected(err))
+	HandleError(err, CustomError{}.Unexpected(err))
 }
 
 func HandleError(err error, d CustomError) {
