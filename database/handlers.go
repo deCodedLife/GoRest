@@ -11,7 +11,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 
-	. "github.com/decodedlife/gorest/tool"
+	. "github.com/deCodedLife/gorest/tool"
 )
 
 var database *sql.DB

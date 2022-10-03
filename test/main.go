@@ -1,6 +1,6 @@
 package main
 
-import . "github.com/decodedlife/gorest/rest"
+import . "github.com/deCodedLife/gorest/rest"
 
 func main() {
 	Construct()
