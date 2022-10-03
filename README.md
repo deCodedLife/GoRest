@@ -40,6 +40,12 @@ mkdir schema
 {
   "title": "Test table",          // Table description
   "table": "test_table",          // Table name
+  "methods": [                    // Allowed methods
+    "GET",
+    "POST",
+    "PUT",
+    "DELETE"
+  ],
   "params": [                     // List of columns
     {
       "title": "Identification",  // Column description
@@ -59,8 +65,8 @@ mkdir schema
 ---
 
 ### Todo
+- [X] Clean up code
 - [X] Handle POST method
 - [X] Handle GET method
-- [ ] Handle PUT method
-- [ ] Handle DELETE methods
-- [ ] Clean up code
+- [X] Handle DELETE methods
+- [X] Handle PUT method
