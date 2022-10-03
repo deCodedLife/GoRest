@@ -6,12 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"reflect"
+	"strconv"
 	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 
-	. "backend/tool"
+	. "gorest/tool"
 )
 
 var database *sql.DB
@@ -188,19 +188,32 @@ func (s Schema) SELECT(d map[string]interface{}) ([]map[string]interface{}, erro
 	}
 
 	for rows.Next() {
-
 		err := rows.Scan(responseColumns...)
 		column := make(map[string]interface{})
 
 		for i, value := range responsePointers {
 
-			if reflect.TypeOf(value) == reflect.TypeOf([]uint8{}) {
-				column[s.Params[i].Article] = fmt.Sprintf("%s", value)
+			valueString := fmt.Sprintf("%s", value)
+
+			if len(valueString) == 1 && s.Params[i].IsNumeric() {
+				valueString = fmt.Sprintf("%d", value)
+				valueString = valueString[1 : len(valueString)-1]
+
+				statement, err := strconv.Atoi(valueString)
+				if err != nil {
+					return nil, err
+				}
+
+				column[s.Params[i].Article] = statement != 0
 				continue
 			}
 
-			column[s.Params[i].Article] = value
+			if s.Params[i].IsNumeric() {
+				column[s.Params[i].Article] = value
+				continue
+			}
 
+			column[s.Params[i].Article] = valueString
 		}
 
 		response = append(response, column)
@@ -208,7 +221,6 @@ func (s Schema) SELECT(d map[string]interface{}) ([]map[string]interface{}, erro
 		if err != nil {
 			return nil, err
 		}
-
 	}
 
 	return response, nil
