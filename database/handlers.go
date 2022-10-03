@@ -102,12 +102,19 @@ func (s Schema) InitTable() {
 func (s Schema) INSERT(d map[string]interface{}) (int64, error) {
 	var columns = ""
 	var values = ""
-	var queryParams []interface{}
 
 	for _, param := range s.Params {
 
-		if d[param.Article] == nil && param.Null != "NO" {
-			continue
+		if d[param.Article] == nil {
+
+			if param.Null != "NO" {
+				continue
+			}
+
+			if param.Default != "" {
+				continue
+			}
+
 		}
 
 		if strings.ToLower(param.Article) == "id" {
@@ -116,27 +123,12 @@ func (s Schema) INSERT(d map[string]interface{}) (int64, error) {
 
 		columns += fmt.Sprintf("`%s`, ", param.Article)
 
-		if d[param.Article] == nil {
-
-			if param.IsNumeric() {
-				values += fmt.Sprintf("%v, ", param.Default)
-			} else {
-				values += fmt.Sprintf("'%v', ", param.Default)
-			}
-
+		if param.IsNumeric() {
+			values += fmt.Sprintf("%v, ", d[param.Article])
 			continue
 		}
 
-		if param.IsNumeric() {
-			//values += "?, "
-			values += fmt.Sprintf("%v, ", d[param.Article])
-		} else {
-			values += fmt.Sprintf("'%v', ", d[param.Article])
-			//values += "'?', "
-
-		}
-
-		queryParams = append(queryParams, fmt.Sprintf("%v", d[param.Article]))
+		values += fmt.Sprintf("'%v', ", d[param.Article])
 
 	}
 
@@ -224,12 +216,38 @@ func (s Schema) SELECT(d map[string]interface{}) ([]map[string]interface{}, erro
 	return response, nil
 }
 
-func (s Schema) UPDATE() bool {
-	return false
+func (s Schema) UPDATE(id int, d map[string]interface{}) (map[string]interface{}, error) {
+	return map[string]interface{}{
+		"rowsAffected": 1,
+	}, nil
 }
 
-func (s Schema) DELETE() bool {
-	return false
+func (s Schema) DELETE(id int) (map[string]interface{}, error) {
+
+	if id == 0 {
+		return nil, errors.New("not allowed")
+	}
+
+	query := fmt.Sprintf("DELETE FROM %s WHERE id = %d", s.Table, id)
+	stmt, err := database.Prepare(query)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := stmt.Exec()
+	if err != nil {
+		return nil, err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return nil, err
+	}
+
+	return map[string]interface{}{
+		"rowsAffected": rowsAffected,
+	}, nil
+
 }
 
 func (s SchemaParam) IsNumeric() bool {
@@ -253,6 +271,20 @@ func (s SchemaParam) IsNumeric() bool {
 	}
 
 	return false
+}
+
+func (s Schema) ContainsMethod(m string) bool {
+
+	for _, method := range s.Methods {
+
+		if strings.ToUpper(method) == m {
+			return true
+		}
+
+	}
+
+	return false
+
 }
 
 func (s Schema) ValidateParams(d map[string]interface{}) error {

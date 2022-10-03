@@ -14,70 +14,100 @@ import (
 )
 
 func HandleRest(s Schema) {
-	var API RestApi
+	if s.ContainsMethod("GET") {
+		Handlers = append(Handlers, RestApi{
+			Path:   s.Table,
+			Method: http.MethodGet,
+			Handler: func(w http.ResponseWriter, r *http.Request) {
+				var userRequest map[string]interface{}
 
-	API.Path = s.Table
+				defer func() {
+					recover()
+				}()
 
-	API.Handler = func(w http.ResponseWriter, r *http.Request) {
-		var userRequest map[string]interface{}
+				err := json.NewDecoder(r.Body).Decode(&userRequest)
+				HandleError(err, CustomError{}.WebError(w, http.StatusNotAcceptable, err))
 
-		defer func() {
-			recover()
-		}()
+				data, err := s.SELECT(userRequest)
+				HandleError(err, CustomError{}.WebError(w, http.StatusInternalServerError, err))
 
-		err := json.NewDecoder(r.Body).Decode(&userRequest)
-		HandleError(err, CustomError{}.WebError(w, 401, err))
-
-		data, err := s.SELECT(userRequest)
-		HandleError(err, CustomError{}.WebError(w, 500, err))
-
-		SendData(w, 200, data)
+				SendData(w, 200, data)
+			},
+		})
 	}
-	API.Method = http.MethodGet
-	Handlers = append(Handlers, API)
 
-	API.Path = s.Table
-	API.Handler = func(w http.ResponseWriter, r *http.Request) {
-		var userRequest map[string]interface{}
+	if s.ContainsMethod("POST") {
+		Handlers = append(Handlers, RestApi{
+			Path:   s.Table,
+			Method: http.MethodPost,
+			Handler: func(w http.ResponseWriter, r *http.Request) {
+				var userRequest map[string]interface{}
 
-		defer func() {
-			recover()
-		}()
+				defer func() {
+					recover()
+				}()
 
-		err := json.NewDecoder(r.Body).Decode(&userRequest)
-		HandleError(err, CustomError{}.WebError(w, 401, err))
+				err := json.NewDecoder(r.Body).Decode(&userRequest)
+				HandleError(err, CustomError{}.WebError(w, http.StatusNotAcceptable, err))
 
-		err = s.ValidateParams(userRequest)
-		HandleError(err, CustomError{}.WebError(w, 401, err))
+				err = s.ValidateParams(userRequest)
+				HandleError(err, CustomError{}.WebError(w, http.StatusNotAcceptable, err))
 
-		id, err := s.INSERT(userRequest)
-		HandleError(err, CustomError{}.WebError(w, 501, err))
+				id, err := s.INSERT(userRequest)
+				HandleError(err, CustomError{}.WebError(w, http.StatusInternalServerError, err))
 
-		SendData(w, 200, id)
+				SendData(w, 200, id)
+			},
+		})
 	}
-	API.Method = http.MethodPost
-	Handlers = append(Handlers, API)
 
-	API.Path = s.Table + "/{id}"
-	API.Handler = func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
+	if s.ContainsMethod("DELETE") {
+		Handlers = append(Handlers, RestApi{
+			Path:   fmt.Sprintf("%s/{id}", s.Table),
+			Method: http.MethodDelete,
+			Handler: func(w http.ResponseWriter, r *http.Request) {
+				vars := mux.Vars(r)
 
-		defer recover()
+				defer func() {
+					recover()
+				}()
 
-		conditionerID, err := strconv.Atoi(vars["id"])
-		HandleError(err, CustomError{}.WebError(w, http.StatusForbidden, err))
+				id, err := strconv.Atoi(vars["id"])
+				HandleError(err, CustomError{}.WebError(w, http.StatusNotAcceptable, err))
 
-		SendData(w, http.StatusOK, fmt.Sprintf("[%d] was deleted", conditionerID))
+				rowsAffected, err := s.DELETE(id)
+				HandleError(err, CustomError{}.WebError(w, http.StatusInternalServerError, err))
+
+				SendData(w, http.StatusOK, rowsAffected)
+			},
+		})
 	}
-	API.Method = http.MethodDelete
-	Handlers = append(Handlers, API)
 
-	API.Path = s.Table
-	API.Handler = func(w http.ResponseWriter, r *http.Request) {
-		SendData(w, http.StatusOK, fmt.Sprintf("[%s] PUT method works fine", s.Table))
+	if s.ContainsMethod("PUT") {
+		Handlers = append(Handlers, RestApi{
+			Path:   fmt.Sprintf("%s/{id}", s.Table),
+			Method: http.MethodPut,
+			Handler: func(w http.ResponseWriter, r *http.Request) {
+				var userRequest map[string]interface{}
+				vars := mux.Vars(r)
+
+				defer func() {
+					recover()
+				}()
+
+				id, err := strconv.Atoi(vars["id"])
+				HandleError(err, CustomError{}.WebError(w, http.StatusNotAcceptable, err))
+
+				json.NewDecoder(r.Body).Decode(userRequest)
+				HandleError(err, CustomError{}.WebError(w, http.StatusNotAcceptable, err))
+
+				rowsAffected, err := s.UPDATE(id, userRequest)
+				HandleError(err, CustomError{}.WebError(w, http.StatusInternalServerError, err))
+
+				SendData(w, http.StatusOK, rowsAffected)
+			},
+		})
 	}
-	API.Method = http.MethodPut
-	Handlers = append(Handlers, API)
 }
 
 func Construct() {
