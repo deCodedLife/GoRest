@@ -16,10 +16,11 @@ and setup golang first
 * Download repo
 ```shell script
 git clone https://github.com/deCodedLife/GoRest
+cd GoRest
 ```
 * Get all dependencies for this project and build project
 ```shell script
-go get -u -v -f all
+go mod download
 go build
 ```
 * Create configuration file `dbSettings.json` for your database and write your authorisation data

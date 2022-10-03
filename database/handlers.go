@@ -11,7 +11,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 
-	. "backend/tool"
+	. "gorest/tool"
 )
 
 var database *sql.DB

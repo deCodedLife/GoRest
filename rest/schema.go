@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 	"strconv"
 
-	. "backend/database"
-	. "backend/tool"
+	. "gorest/database"
+	. "gorest/tool"
 )
 
 func HandleRest(s Schema) {

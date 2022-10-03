@@ -1,8 +1,6 @@
 package main
 
-import (
-	. "backend/rest"
-)
+import . "gorest/rest"
 
 func main() {
 	Construct()
