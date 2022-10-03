@@ -1,0 +1,41 @@
+{
+  "title": "Test table",
+  "table": "products",
+  "params": [
+    {
+      "title": "Identification",
+      "article": "id",
+      "type": "int",
+      "null": "NO",
+      "default": ""
+    },
+    {
+      "title": "Product label",
+      "article": "product_name",
+      "type": "varchar(256)",
+      "null": "YES",
+      "default": ""
+    },
+    {
+      "title": "Product model",
+      "article": "model",
+      "type": "varchar(256)",
+      "null": "YES",
+      "default": ""
+    },
+    {
+      "title": "Product type",
+      "article": "type",
+      "type": "int",
+      "null": "NO",
+      "default": ""
+    },
+    {
+      "title": "Is active",
+      "article": "active",
+      "type": "bit(1)",
+      "null": "NO",
+      "default": "1"
+    }
+  ]
+}
