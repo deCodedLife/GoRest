@@ -119,7 +119,7 @@ func HandleRest(s Schema) {
 	}
 }
 
-func Construct() {
+func Construct() []RestApi {
 	DBConfig.Init()
 	InitDatabase()
 
@@ -139,12 +139,5 @@ func Construct() {
 		dbSchema.InitTable()
 	}
 
-	r := mux.NewRouter()
-
-	for _, api := range Handlers {
-		r.HandleFunc("/"+api.Path, api.Handler).Methods(api.Method)
-	}
-
-	err = http.ListenAndServe(":80", r)
-	HandleError(err, CustomError{}.Unexpected(err))
+	return Handlers
 }
