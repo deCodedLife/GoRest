@@ -19,7 +19,19 @@ func HandleRest(s Schema) {
 	API.Path = s.Table
 
 	API.Handler = func(w http.ResponseWriter, r *http.Request) {
+		var userRequest map[string]interface{}
 
+		defer func() {
+			recover()
+		}()
+
+		err := json.NewDecoder(r.Body).Decode(&userRequest)
+		HandleError(err, CustomError{}.WebError(w, 401, err))
+
+		data, err := s.SELECT(userRequest)
+		HandleError(err, CustomError{}.WebError(w, 500, err))
+
+		SendData(w, 200, data)
 	}
 	API.Method = http.MethodGet
 	Handlers = append(Handlers, API)
@@ -73,16 +85,16 @@ func Construct() {
 	InitDatabase()
 
 	filesList, err := ioutil.ReadDir(SchemaDir)
-	HandleError(err, CustomError{}.Unxepected(err))
+	HandleError(err, CustomError{}.Unexpected(err))
 
 	for _, file := range filesList {
 		var dbSchema Schema
 
 		byteData, err := ioutil.ReadFile(filepath.Join(SchemaDir, file.Name()))
-		HandleError(err, CustomError{}.Unxepected(err))
+		HandleError(err, CustomError{}.Unexpected(err))
 
 		err = json.Unmarshal(byteData, &dbSchema)
-		HandleError(err, CustomError{}.Unxepected(err))
+		HandleError(err, CustomError{}.Unexpected(err))
 
 		HandleRest(dbSchema)
 		dbSchema.InitTable()
@@ -95,5 +107,5 @@ func Construct() {
 	}
 
 	err = http.ListenAndServe(":80", r)
-	HandleError(err, CustomError{}.Unxepected(err))
+	HandleError(err, CustomError{}.Unexpected(err))
 }

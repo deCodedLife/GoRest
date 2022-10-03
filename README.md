@@ -60,7 +60,7 @@ mkdir schema
 
 ### Todo
 - [X] Handle POST method
-- [ ] Handle GET method
+- [X] Handle GET method
 - [ ] Handle PUT method
 - [ ] Handle DELETE methods
 - [ ] Clean up code
