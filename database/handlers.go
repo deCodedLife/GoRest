@@ -174,9 +174,9 @@ func (s Schema) SELECT(d map[string]interface{}) ([]map[string]interface{}, erro
 
 	if whereClauses == "WHERE " {
 		whereClauses = ""
+	} else {
+		whereClauses = whereClauses[:len(whereClauses)-len(" AND ")]
 	}
-
-	whereClauses = whereClauses[:len(whereClauses)-len(" AND ")]
 
 	query := fmt.Sprintf("SELECT * FROM %s %s", s.Table, whereClauses)
 	stmt, err := database.Prepare(query)
