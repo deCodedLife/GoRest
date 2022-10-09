@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 	"strconv"
 
-	. "github.com/decodedlife/gorest/database"
-	. "github.com/decodedlife/gorest/tool"
+	. "github.com/deCodedLife/gorest/database"
+	. "github.com/deCodedLife/gorest/tool"
 )
 
 func HandleRest(s Schema) {
@@ -20,14 +20,39 @@ func HandleRest(s Schema) {
 			Path:   s.Table,
 			Method: http.MethodGet,
 			Handler: func(w http.ResponseWriter, r *http.Request) {
-				var userRequest map[string]interface{}
+				var userRequest = make(map[string]interface{})
+				variables := r.URL.Query()
+
+				for _, param := range s.Params {
+					var valueExists bool
+
+					for variable := range variables {
+						if variable == param.Article {
+
+							value := variables.Get(variable)
+
+							if value == "" {
+								break
+							}
+
+							valueExists = true
+							break
+						}
+					}
+
+					if valueExists == false {
+						continue
+					}
+
+					userRequest[param.Article] = variables.Get(param.Article)
+				}
 
 				defer func() {
 					recover()
 				}()
 
-				err := json.NewDecoder(r.Body).Decode(&userRequest)
-				HandleError(err, CustomError{}.WebError(w, http.StatusNotAcceptable, err))
+				//err := json.NewDecoder(r.Body).Decode(&userRequest)
+				//HandleError(err, CustomError{}.WebError(w, http.StatusNotAcceptable, err))
 
 				data, err := s.SELECT(userRequest)
 				HandleError(err, CustomError{}.WebError(w, http.StatusInternalServerError, err))
@@ -119,7 +144,7 @@ func HandleRest(s Schema) {
 	}
 }
 
-func Construct() {
+func Construct() []RestApi {
 	DBConfig.Init()
 	InitDatabase()
 
@@ -139,12 +164,5 @@ func Construct() {
 		dbSchema.InitTable()
 	}
 
-	r := mux.NewRouter()
-
-	for _, api := range Handlers {
-		r.HandleFunc("/"+api.Path, api.Handler).Methods(api.Method)
-	}
-
-	err = http.ListenAndServe(":80", r)
-	HandleError(err, CustomError{}.Unexpected(err))
+	return Handlers
 }

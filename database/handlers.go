@@ -11,7 +11,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 
-	. "github.com/decodedlife/gorest/tool"
+	. "github.com/deCodedLife/gorest/tool"
 )
 
 var database *sql.DB
@@ -162,11 +162,11 @@ func (s Schema) SELECT(d map[string]interface{}) ([]map[string]interface{}, erro
 		if d[param.Article] != nil {
 
 			if param.IsNumeric() {
-				whereClauses += fmt.Sprintf("`%s` = %v", param.Article, d[param.Article])
+				whereClauses += fmt.Sprintf("`%s` = %v AND ", param.Article, d[param.Article])
 				continue
 			}
 
-			whereClauses += fmt.Sprintf("`%s` LIKE '%%%v%%'", param.Article, d[param.Article])
+			whereClauses += fmt.Sprintf("`%s` LIKE '%%%v%%' AND ", param.Article, d[param.Article])
 
 		}
 
@@ -174,6 +174,8 @@ func (s Schema) SELECT(d map[string]interface{}) ([]map[string]interface{}, erro
 
 	if whereClauses == "WHERE " {
 		whereClauses = ""
+	} else {
+		whereClauses = whereClauses[:len(whereClauses)-len(" AND ")]
 	}
 
 	query := fmt.Sprintf("SELECT * FROM %s %s", s.Table, whereClauses)
