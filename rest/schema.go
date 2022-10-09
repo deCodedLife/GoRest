@@ -16,19 +16,9 @@ import (
 
 func HandleRest(s Schema) {
 	if s.ContainsMethod("GET") {
-		var getQueries []Query
-
-		for _, param := range s.Params {
-			getQueries = append(getQueries, Query{
-				Name:  param.Article,
-				Param: fmt.Sprintf("{%s}", param.Article),
-			})
-		}
-
 		Handlers = append(Handlers, RestApi{
-			Path:    s.Table,
-			Method:  http.MethodGet,
-			Queries: getQueries,
+			Path:   s.Table,
+			Method: http.MethodGet,
 			Handler: func(w http.ResponseWriter, r *http.Request) {
 				var userRequest = make(map[string]interface{})
 				variables := r.URL.Query()
@@ -36,7 +26,7 @@ func HandleRest(s Schema) {
 				for _, param := range s.Params {
 					var valueExists bool
 
-					for variable, _ := range variables {
+					for variable := range variables {
 						if variable == param.Article {
 
 							value := variables.Get(variable)

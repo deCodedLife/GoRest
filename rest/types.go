@@ -16,6 +16,5 @@ type Query struct {
 type RestApi struct {
 	Method  string
 	Path    string
-	Queries []Query
 	Handler func(w http.ResponseWriter, r *http.Request)
 }
