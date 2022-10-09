@@ -16,18 +16,53 @@ import (
 
 func HandleRest(s Schema) {
 	if s.ContainsMethod("GET") {
+		var getQueries []Query
+
+		for _, param := range s.Params {
+			getQueries = append(getQueries, Query{
+				Name:  param.Article,
+				Param: fmt.Sprintf("{%s}", param.Article),
+			})
+		}
+
 		Handlers = append(Handlers, RestApi{
-			Path:   s.Table,
-			Method: http.MethodGet,
+			Path:    s.Table,
+			Method:  http.MethodGet,
+			Queries: getQueries,
 			Handler: func(w http.ResponseWriter, r *http.Request) {
-				var userRequest map[string]interface{}
+				var userRequest = make(map[string]interface{})
+				variables := r.URL.Query()
+
+				for _, param := range s.Params {
+					var valueExists bool
+
+					for variable, _ := range variables {
+						if variable == param.Article {
+
+							value := variables.Get(variable)
+
+							if value == "" {
+								break
+							}
+
+							valueExists = true
+							break
+						}
+					}
+
+					if valueExists == false {
+						continue
+					}
+
+					userRequest[param.Article] = variables.Get(param.Article)
+				}
 
 				defer func() {
 					recover()
 				}()
 
-				err := json.NewDecoder(r.Body).Decode(&userRequest)
-				HandleError(err, CustomError{}.WebError(w, http.StatusNotAcceptable, err))
+				//err := json.NewDecoder(r.Body).Decode(&userRequest)
+				//HandleError(err, CustomError{}.WebError(w, http.StatusNotAcceptable, err))
 
 				data, err := s.SELECT(userRequest)
 				HandleError(err, CustomError{}.WebError(w, http.StatusInternalServerError, err))

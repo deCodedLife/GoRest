@@ -8,8 +8,14 @@ const SchemaDir = "schema"
 
 var Handlers []RestApi
 
+type Query struct {
+	Name  string
+	Param string
+}
+
 type RestApi struct {
-	Path    string
-	Handler func(w http.ResponseWriter, r *http.Request)
 	Method  string
+	Path    string
+	Queries []Query
+	Handler func(w http.ResponseWriter, r *http.Request)
 }
