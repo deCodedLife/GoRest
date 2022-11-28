@@ -15,6 +15,14 @@ import (
 )
 
 func HandleRest(s Schema) {
+	Handlers = append(Handlers, RestApi{
+		Path:   s.Table + "/schema",
+		Method: http.MethodGet,
+		Handler: func(w http.ResponseWriter, r *http.Request) {
+			SendData(w, 200, s.Params)
+		},
+	})
+
 	if s.ContainsMethod("GET") {
 		Handlers = append(Handlers, RestApi{
 			Path:   s.Table,
@@ -50,9 +58,6 @@ func HandleRest(s Schema) {
 				defer func() {
 					recover()
 				}()
-
-				//err := json.NewDecoder(r.Body).Decode(&userRequest)
-				//HandleError(err, CustomError{}.WebError(w, http.StatusNotAcceptable, err))
 
 				data, err := s.SELECT(userRequest)
 				HandleError(err, CustomError{}.WebError(w, http.StatusInternalServerError, err))

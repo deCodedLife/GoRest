@@ -13,6 +13,7 @@ type SchemaParam struct {
 	Type    string `json:"type"`
 	Null    string `json:"null"`
 	Default string `json:"default"`
+	Display bool   `json:"display"`
 }
 
 type Schema struct {
