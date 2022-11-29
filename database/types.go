@@ -8,12 +8,14 @@ type DBConfigs struct {
 }
 
 type SchemaParam struct {
-	Title   string `json:"title"`
-	Article string `json:"article"`
-	Type    string `json:"type"`
-	Null    string `json:"null"`
-	Default string `json:"default"`
-	Display bool   `json:"display"`
+	Title       string `json:"title"`
+	Article     string `json:"article"`
+	Type        string `json:"type"`
+	Null        string `json:"null"`
+	Default     string `json:"default"`
+	Display     bool   `json:"display"`
+	DisplayType string `json:"display_type"`
+	TakeFrom    string `json:"take_from"`
 }
 
 type Schema struct {
