@@ -35,9 +35,6 @@ func PrintLog(t string, s string, d interface{}) {
 
 func SendData(w http.ResponseWriter, s int32, d interface{}) {
 
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Headers:", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "*")
 	w.Header().Set("Content-Type", "application/json")
 
 	var response Response
