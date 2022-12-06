@@ -16,16 +16,16 @@ import (
 
 func HandleRest(s Schema) {
 	Handlers = append(Handlers, RestApi{
-		Path:   fmt.Sprintf("/api/%s/schema", s.Table),
+		Path:   s.Table + "/schema",
 		Method: http.MethodGet,
 		Handler: func(w http.ResponseWriter, r *http.Request) {
-			SendData(w, http.StatusOK, s.Params)
+			SendData(w, 200, s.Params)
 		},
 	})
 
 	if s.ContainsMethod("GET") {
 		Handlers = append(Handlers, RestApi{
-			Path:   fmt.Sprintf("/api/%s", s.Table),
+			Path:   s.Table,
 			Method: http.MethodGet,
 			Handler: func(w http.ResponseWriter, r *http.Request) {
 				var userRequest = make(map[string]interface{})
@@ -62,14 +62,14 @@ func HandleRest(s Schema) {
 				data, err := s.SELECT(userRequest)
 				HandleError(err, CustomError{}.WebError(w, http.StatusInternalServerError, err))
 
-				SendData(w, http.StatusOK, data)
+				SendData(w, 200, data)
 			},
 		})
 	}
 
 	if s.ContainsMethod("POST") {
 		Handlers = append(Handlers, RestApi{
-			Path:   fmt.Sprintf("/api/%s", s.Table),
+			Path:   s.Table,
 			Method: http.MethodPost,
 			Handler: func(w http.ResponseWriter, r *http.Request) {
 				var userRequest map[string]interface{}
@@ -87,14 +87,14 @@ func HandleRest(s Schema) {
 				id, err := s.INSERT(userRequest)
 				HandleError(err, CustomError{}.WebError(w, http.StatusInternalServerError, err))
 
-				SendData(w, http.StatusOK, id)
+				SendData(w, 200, id)
 			},
 		})
 	}
 
 	if s.ContainsMethod("DELETE") {
 		Handlers = append(Handlers, RestApi{
-			Path:   fmt.Sprintf("/api/%s/{id}", s.Table),
+			Path:   fmt.Sprintf("%s/{id}", s.Table),
 			Method: http.MethodDelete,
 			Handler: func(w http.ResponseWriter, r *http.Request) {
 				vars := mux.Vars(r)
@@ -120,7 +120,7 @@ func HandleRest(s Schema) {
 
 	if s.ContainsMethod("PUT") {
 		Handlers = append(Handlers, RestApi{
-			Path:   fmt.Sprintf("/api/%s/{id}", s.Table),
+			Path:   fmt.Sprintf("%s/{id}", s.Table),
 			Method: http.MethodPut,
 			Handler: func(w http.ResponseWriter, r *http.Request) {
 				var userRequest map[string]interface{}
