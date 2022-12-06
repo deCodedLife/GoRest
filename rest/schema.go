@@ -19,7 +19,7 @@ func HandleRest(s Schema) {
 		Path:   s.Table + "/schema",
 		Method: http.MethodGet,
 		Handler: func(w http.ResponseWriter, r *http.Request) {
-			SendData(w, 200, s.Params)
+			SendData(w, http.StatusOK, s.Params)
 		},
 	})
 
@@ -62,7 +62,7 @@ func HandleRest(s Schema) {
 				data, err := s.SELECT(userRequest)
 				HandleError(err, CustomError{}.WebError(w, http.StatusInternalServerError, err))
 
-				SendData(w, 200, data)
+				SendData(w, http.StatusOK, data)
 			},
 		})
 	}
@@ -87,7 +87,7 @@ func HandleRest(s Schema) {
 				id, err := s.INSERT(userRequest)
 				HandleError(err, CustomError{}.WebError(w, http.StatusInternalServerError, err))
 
-				SendData(w, 200, id)
+				SendData(w, http.StatusOK, id)
 			},
 		})
 	}

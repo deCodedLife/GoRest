@@ -35,16 +35,19 @@ func PrintLog(t string, s string, d interface{}) {
 
 func SendData(w http.ResponseWriter, s int32, d interface{}) {
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Headers:", "*")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers:", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Content-Type", "application/json")
 
 	var response Response
 	response.StatusCode = s
 	response.Data = d
 
-	err := json.NewEncoder(w).Encode(response)
+	jsonData, err := json.Marshal(response)
+	HandleError(err, CustomError{}.Unexpected(err))
+
+	_, err = w.Write(jsonData)
 	HandleError(err, CustomError{}.Unexpected(err))
 }
 
