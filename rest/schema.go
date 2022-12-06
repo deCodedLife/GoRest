@@ -16,7 +16,7 @@ import (
 
 func HandleRest(s Schema) {
 	Handlers = append(Handlers, RestApi{
-		Path:   s.Table + "/schema",
+		Path:   fmt.Sprintf("/api/%s/schema", s.Table),
 		Method: http.MethodGet,
 		Handler: func(w http.ResponseWriter, r *http.Request) {
 			SendData(w, http.StatusOK, s.Params)
@@ -25,7 +25,7 @@ func HandleRest(s Schema) {
 
 	if s.ContainsMethod("GET") {
 		Handlers = append(Handlers, RestApi{
-			Path:   s.Table,
+			Path:   fmt.Sprintf("/api/%s", s.Table),
 			Method: http.MethodGet,
 			Handler: func(w http.ResponseWriter, r *http.Request) {
 				var userRequest = make(map[string]interface{})
@@ -69,7 +69,7 @@ func HandleRest(s Schema) {
 
 	if s.ContainsMethod("POST") {
 		Handlers = append(Handlers, RestApi{
-			Path:   s.Table,
+			Path:   fmt.Sprintf("/api/%s", s.Table),
 			Method: http.MethodPost,
 			Handler: func(w http.ResponseWriter, r *http.Request) {
 				var userRequest map[string]interface{}
@@ -94,7 +94,7 @@ func HandleRest(s Schema) {
 
 	if s.ContainsMethod("DELETE") {
 		Handlers = append(Handlers, RestApi{
-			Path:   fmt.Sprintf("%s/{id}", s.Table),
+			Path:   fmt.Sprintf("/api/%s/{id}", s.Table),
 			Method: http.MethodDelete,
 			Handler: func(w http.ResponseWriter, r *http.Request) {
 				vars := mux.Vars(r)
@@ -120,7 +120,7 @@ func HandleRest(s Schema) {
 
 	if s.ContainsMethod("PUT") {
 		Handlers = append(Handlers, RestApi{
-			Path:   fmt.Sprintf("%s/{id}", s.Table),
+			Path:   fmt.Sprintf("/api/%s/{id}", s.Table),
 			Method: http.MethodPut,
 			Handler: func(w http.ResponseWriter, r *http.Request) {
 				var userRequest map[string]interface{}
