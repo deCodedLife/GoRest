@@ -149,24 +149,48 @@ func HandleRest(s Schema) {
 	}
 }
 
+func GetSchemas() ([]Schema, error) {
+
+	var schemasList []Schema
+
+	filesList, err := ioutil.ReadDir(SchemaDir)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, file := range filesList {
+
+		var dbSchema Schema
+
+		byteData, err := ioutil.ReadFile(filepath.Join(SchemaDir, file.Name()))
+
+		if err != nil {
+			return nil, err
+		}
+
+		err = json.Unmarshal(byteData, &dbSchema)
+
+		if err != nil {
+			return nil, err
+		}
+
+		schemasList = append(schemasList, dbSchema)
+	}
+
+	return schemasList, nil
+}
+
 func Construct() []RestApi {
 	DBConfig.Init()
 	InitDatabase()
 
-	filesList, err := ioutil.ReadDir(SchemaDir)
+	schemasList, err := GetSchemas()
 	HandleError(err, CustomError{}.Unexpected(err))
 
-	for _, file := range filesList {
-		var dbSchema Schema
-
-		byteData, err := ioutil.ReadFile(filepath.Join(SchemaDir, file.Name()))
-		HandleError(err, CustomError{}.Unexpected(err))
-
-		err = json.Unmarshal(byteData, &dbSchema)
-		HandleError(err, CustomError{}.Unexpected(err))
-
-		HandleRest(dbSchema)
-		dbSchema.InitTable()
+	for _, schema := range schemasList {
+		HandleRest(schema)
+		schema.InitTable()
 	}
 
 	return Handlers
