@@ -14,12 +14,21 @@ import (
 	. "github.com/deCodedLife/gorest/tool"
 )
 
+type SchemaStructure struct {
+	Table  string        `json:"table"`
+	Schema []SchemaParam `json:"schema"`
+}
+
 func HandleRest(s Schema) {
 	Handlers = append(Handlers, RestApi{
 		Path:   s.Table + "/schema",
 		Method: http.MethodGet,
 		Handler: func(w http.ResponseWriter, r *http.Request) {
-			SendData(w, 200, s.Params)
+			returnStructure := SchemaStructure{
+				Table:  s.Title,
+				Schema: s.Params,
+			}
+			SendData(w, 200, returnStructure)
 		},
 	})
 
