@@ -16,6 +16,7 @@ type SchemaParam struct {
 	Display     bool   `json:"display"`
 	DisplayType string `json:"display_type"`
 	TakeFrom    string `json:"take_from"`
+	Join        string `json:"join"`
 }
 
 type Schema struct {

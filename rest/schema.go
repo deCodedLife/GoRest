@@ -4,19 +4,99 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gorilla/mux"
-	"io/ioutil"
-	"net/http"
-	"path/filepath"
-	"strconv"
-
 	. "github.com/deCodedLife/gorest/database"
 	. "github.com/deCodedLife/gorest/tool"
+	"github.com/gorilla/mux"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
 )
 
 type SchemaStructure struct {
 	Table  string        `json:"table"`
 	Schema []SchemaParam `json:"schema"`
+}
+
+func ExtendObjects() {
+	schemas, _ := GetSchemas()
+
+	for _, s := range schemas {
+		Handlers = append(Handlers, RestApi{
+			Path:   "full-" + s.Table,
+			Method: http.MethodGet,
+			Handler: func(w http.ResponseWriter, r *http.Request) {
+				var uriParams = make(map[string]interface{})
+				schemes, err := GetSchemas()
+				HandleError(err, CustomError{}.WebError(w, http.StatusInternalServerError, err))
+
+				var relatedObjects []SchemaParam
+
+				for _, param := range s.Params {
+					var valueExists bool
+
+					if param.TakeFrom != "" {
+						relatedObjects = append(relatedObjects, param)
+					}
+
+					for variable := range r.URL.Query() {
+						if variable == param.Article {
+							value := r.URL.Query().Get(variable)
+
+							if value == "" {
+								break
+							}
+
+							valueExists = true
+							break
+						}
+					}
+
+					if valueExists == false {
+						continue
+					}
+
+					uriParams[param.Article] = r.URL.Query().Get(param.Article)
+				}
+
+				data, err := s.SELECT(uriParams)
+				object := data[0]
+
+				HandleError(err, CustomError{}.WebError(w, http.StatusInternalServerError, err))
+
+				for _, param := range relatedObjects {
+					if param.TakeFrom == "" && param.Join == "" {
+						continue
+					}
+
+					relatedObject := strings.Split(param.TakeFrom, "/")[0]
+					relatedParam := "id"
+
+					if param.TakeFrom == "" {
+						relatedObject = strings.Split(param.Join, "/")[0]
+						relatedParam = strings.Split(param.Join, "/")[1]
+					}
+
+					for _, scheme := range schemes {
+						if scheme.Table != relatedObject {
+							continue
+						}
+
+						request := make(map[string]interface{})
+						request[relatedParam] = object[param.Article]
+						relatedList, err := scheme.SELECT(request)
+						related := relatedList[0]
+
+						HandleError(err, CustomError{}.WebError(w, http.StatusInternalServerError, err))
+						object[param.Article] = related
+					}
+				}
+
+				SendData(w, http.StatusOK, object)
+			},
+		})
+	}
 }
 
 func HandleRest(s Schema) {
@@ -162,7 +242,7 @@ func GetSchemas() ([]Schema, error) {
 
 	var schemasList []Schema
 
-	filesList, err := ioutil.ReadDir(SchemaDir)
+	filesList, err := os.ReadDir(SchemaDir)
 
 	if err != nil {
 		return nil, err
@@ -172,7 +252,7 @@ func GetSchemas() ([]Schema, error) {
 
 		var dbSchema Schema
 
-		byteData, err := ioutil.ReadFile(filepath.Join(SchemaDir, file.Name()))
+		byteData, err := os.ReadFile(filepath.Join(SchemaDir, file.Name()))
 
 		if err != nil {
 			return nil, err
@@ -201,6 +281,8 @@ func Construct() []RestApi {
 		HandleRest(schema)
 		schema.InitTable()
 	}
+
+	ExtendObjects()
 
 	return Handlers
 }
