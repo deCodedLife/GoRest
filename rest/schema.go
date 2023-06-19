@@ -8,6 +8,7 @@ import (
 	. "github.com/deCodedLife/gorest/tool"
 	"github.com/gorilla/mux"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -19,57 +20,56 @@ type SchemaStructure struct {
 	Schema []SchemaParam `json:"schema"`
 }
 
+func ParamsToQuery(s Schema, query url.Values) map[string]interface{} {
+	var uriParams = make(map[string]interface{})
+	for _, param := range s.Params {
+		var valueExists bool
+		for variable := range query {
+			if variable == param.Article {
+				value := query.Get(variable)
+				if value == "" {
+					break
+				}
+				valueExists = true
+				break
+			}
+		}
+		if valueExists == false {
+			continue
+		}
+		uriParams[param.Article] = query.Get(param.Article)
+	}
+	return uriParams
+}
+
 func ExtendObjects() {
 	schemas, _ := GetSchemas()
 
 	for _, s := range schemas {
 		Handlers = append(Handlers, RestApi{
-			Path:   "full-" + s.Table,
+			Path:   "serialized-" + s.Table,
 			Method: http.MethodGet,
 			Handler: func(w http.ResponseWriter, r *http.Request) {
-				var uriParams = make(map[string]interface{})
+				defer func() {
+					recover()
+				}()
+
 				schemes, err := GetSchemas()
 				HandleError(err, CustomError{}.WebError(w, http.StatusInternalServerError, err))
 
 				var relatedObjects []SchemaParam
-
 				for _, param := range s.Params {
-					var valueExists bool
-
-					if param.TakeFrom != "" {
+					if param.TakeFrom != "" || param.Join != "" {
 						relatedObjects = append(relatedObjects, param)
 					}
-
-					for variable := range r.URL.Query() {
-						if variable == param.Article {
-							value := r.URL.Query().Get(variable)
-
-							if value == "" {
-								break
-							}
-
-							valueExists = true
-							break
-						}
-					}
-
-					if valueExists == false {
-						continue
-					}
-
-					uriParams[param.Article] = r.URL.Query().Get(param.Article)
 				}
 
-				data, err := s.SELECT(uriParams)
+				data, err := s.SELECT(ParamsToQuery(s, r.URL.Query()))
 				object := data[0]
 
 				HandleError(err, CustomError{}.WebError(w, http.StatusInternalServerError, err))
 
 				for _, param := range relatedObjects {
-					if param.TakeFrom == "" && param.Join == "" {
-						continue
-					}
-
 					relatedObject := strings.Split(param.TakeFrom, "/")[0]
 					relatedParam := "id"
 
@@ -86,10 +86,14 @@ func ExtendObjects() {
 						request := make(map[string]interface{})
 						request[relatedParam] = object[param.Article]
 						relatedList, err := scheme.SELECT(request)
-						related := relatedList[0]
+
+						if len(relatedList) == 0 {
+							object[param.Article] = nil
+							continue
+						}
 
 						HandleError(err, CustomError{}.WebError(w, http.StatusInternalServerError, err))
-						object[param.Article] = related
+						object[param.Article] = relatedList[0]
 					}
 				}
 
@@ -117,40 +121,11 @@ func HandleRest(s Schema) {
 			Path:   s.Table,
 			Method: http.MethodGet,
 			Handler: func(w http.ResponseWriter, r *http.Request) {
-				var userRequest = make(map[string]interface{})
-				variables := r.URL.Query()
-
-				for _, param := range s.Params {
-					var valueExists bool
-
-					for variable := range variables {
-						if variable == param.Article {
-
-							value := variables.Get(variable)
-
-							if value == "" {
-								break
-							}
-
-							valueExists = true
-							break
-						}
-					}
-
-					if valueExists == false {
-						continue
-					}
-
-					userRequest[param.Article] = variables.Get(param.Article)
-				}
-
 				defer func() {
 					recover()
 				}()
-
-				data, err := s.SELECT(userRequest)
+				data, err := s.SELECT(ParamsToQuery(s, r.URL.Query()))
 				HandleError(err, CustomError{}.WebError(w, http.StatusInternalServerError, err))
-
 				SendData(w, 200, data)
 			},
 		})
