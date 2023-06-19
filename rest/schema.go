@@ -20,6 +20,8 @@ type SchemaStructure struct {
 	Schema []SchemaParam `json:"schema"`
 }
 
+var SCHEMAS []Schema
+
 func ParamsToQuery(s Schema, query url.Values) map[string]interface{} {
 	var uriParams = make(map[string]interface{})
 	for _, param := range s.Params {
@@ -43,42 +45,36 @@ func ParamsToQuery(s Schema, query url.Values) map[string]interface{} {
 }
 
 func ExtendObjects() {
-	schemas, _ := GetSchemas()
-
-	for _, s := range schemas {
+	for _, s := range SCHEMAS {
 		Handlers = append(Handlers, RestApi{
-			Path:   "serialized-" + s.Table,
+			Path:   "serialized" + strings.ToTitle(s.Table),
 			Method: http.MethodGet,
 			Handler: func(w http.ResponseWriter, r *http.Request) {
 				defer func() {
 					recover()
 				}()
-
-				schemes, err := GetSchemas()
-				HandleError(err, CustomError{}.WebError(w, http.StatusInternalServerError, err))
-
-				var relatedObjects []SchemaParam
-				for _, param := range s.Params {
-					if param.TakeFrom != "" || param.Join != "" {
-						relatedObjects = append(relatedObjects, param)
-					}
-				}
-
 				data, err := s.SELECT(ParamsToQuery(s, r.URL.Query()))
+				if len(data) == 0 {
+					SendData(w, http.StatusOK, nil)
+					return
+				}
 				object := data[0]
-
 				HandleError(err, CustomError{}.WebError(w, http.StatusInternalServerError, err))
 
-				for _, param := range relatedObjects {
+				for _, param := range s.Params {
+					if param.TakeFrom == "" && param.Join == "" {
+						continue
+					}
+
 					relatedObject := strings.Split(param.TakeFrom, "/")[0]
 					relatedParam := "id"
 
-					if param.TakeFrom == "" {
+					if param.Join != "" {
 						relatedObject = strings.Split(param.Join, "/")[0]
 						relatedParam = strings.Split(param.Join, "/")[1]
 					}
 
-					for _, scheme := range schemes {
+					for _, scheme := range SCHEMAS {
 						if scheme.Table != relatedObject {
 							continue
 						}
@@ -162,21 +158,17 @@ func HandleRest(s Schema) {
 			Method: http.MethodDelete,
 			Handler: func(w http.ResponseWriter, r *http.Request) {
 				vars := mux.Vars(r)
-
 				defer func() {
 					recover()
 				}()
-
 				id, err := strconv.Atoi(vars["id"])
 				HandleError(err, CustomError{}.WebError(
 					w,
 					http.StatusNotAcceptable,
 					errors.New("not allowed"),
 				))
-
 				rowsAffected, err := s.DELETE(id)
 				HandleError(err, CustomError{}.WebError(w, http.StatusInternalServerError, err))
-
 				SendData(w, http.StatusOK, rowsAffected)
 			},
 		})
@@ -242,6 +234,7 @@ func GetSchemas() ([]Schema, error) {
 		schemasList = append(schemasList, dbSchema)
 	}
 
+	SCHEMAS = schemasList
 	return schemasList, nil
 }
 

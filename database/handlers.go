@@ -42,6 +42,9 @@ func (s Schema) InitTable() {
 	var query = ""
 
 	for _, param := range s.Params {
+		if param.Type == "" {
+			continue
+		}
 
 		query += fmt.Sprintf("`%s` ", param.Article)
 		query += param.Type + " "
@@ -104,6 +107,10 @@ func (s Schema) INSERT(d map[string]interface{}) (int64, error) {
 
 	for _, param := range s.Params {
 
+		if param.Type == "" {
+			continue
+		}
+
 		if d[param.Article] == nil {
 
 			if param.Null != "NO" {
@@ -156,6 +163,10 @@ func (s Schema) SELECT(d map[string]interface{}) ([]map[string]interface{}, erro
 	var whereClauses = "WHERE "
 
 	for index, param := range s.Params {
+
+		if param.Type == "" {
+			continue
+		}
 
 		responseColumns[index] = &responsePointers[index]
 
@@ -232,6 +243,10 @@ func (s Schema) UPDATE(id int, d map[string]interface{}) (map[string]interface{}
 	var setClause = ""
 
 	for _, param := range s.Params {
+
+		if param.Type == "" {
+			continue
+		}
 
 		if d[param.Article] == nil {
 			continue
