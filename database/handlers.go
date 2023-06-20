@@ -160,6 +160,8 @@ func (s Schema) INSERT(d map[string]interface{}) (int64, error) {
 
 func (s Schema) SELECT(d map[string]interface{}) ([]map[string]interface{}, error) {
 	var response []map[string]interface{}
+	var params = make([]SchemaParam, s.ParamsCount)
+
 	var responsePointers = make([]interface{}, s.ParamsCount)
 	var responseColumns = make([]interface{}, s.ParamsCount)
 	var whereClauses = "WHERE "
@@ -170,6 +172,7 @@ func (s Schema) SELECT(d map[string]interface{}) ([]map[string]interface{}, erro
 			continue
 		}
 
+		params = append(params, param)
 		responseColumns[index] = &responsePointers[index]
 
 		if d[param.Article] != nil {
@@ -204,35 +207,43 @@ func (s Schema) SELECT(d map[string]interface{}) ([]map[string]interface{}, erro
 
 	for rows.Next() {
 		err := rows.Scan(responseColumns...)
-		column := make(map[string]interface{})
+		row := make(map[string]interface{})
 
 		for i, value := range responsePointers {
 
-			index := nextParam(s, i)
+			param := params[i]
 			valueString := fmt.Sprintf("%s", value)
 
-			if len(valueString) == 1 && s.Params[index].IsNumeric() {
-				valueString = fmt.Sprintf("%d", value)
-				valueString = valueString[1 : len(valueString)-1]
-
-				statement, err := strconv.Atoi(valueString)
+			if len(strings.Split(param.Type, "int")) > 1 {
+				intVal, err := strconv.Atoi(valueString)
 				if err != nil {
-					return nil, err
+					continue
 				}
-
-				column[s.Params[index].Article] = statement != 0
+				row[param.Article] = intVal
 				continue
 			}
 
-			if s.Params[index].IsNumeric() {
-				column[s.Params[index].Article] = value
+			if len(strings.Split(param.Type, "float")) > 1 {
+				floatVal, err := strconv.ParseFloat(valueString, 64)
+				if err != nil {
+					continue
+				}
+				row[param.Article] = floatVal
 				continue
 			}
 
-			column[s.Params[index].Article] = valueString
+			if len(strings.Split(param.Type, "char")) > 1 {
+				if valueString == "Y" {
+					row[param.Article] = true
+				} else if valueString == "N" {
+					row[param.Article] = false
+				}
+			}
+
+			row[param.Article] = valueString
 		}
 
-		response = append(response, column)
+		response = append(response, row)
 
 		if err != nil {
 			return nil, err
