@@ -207,6 +207,11 @@ func (s Schema) SELECT(d map[string]interface{}) ([]map[string]interface{}, erro
 
 	for rows.Next() {
 		err := rows.Scan(responseColumns...)
+
+		if err != nil {
+			return nil, err
+		}
+
 		row := make(map[string]interface{})
 
 		for i, value := range responseColumns {
