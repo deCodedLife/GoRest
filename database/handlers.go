@@ -214,7 +214,7 @@ func (s Schema) SELECT(d map[string]interface{}) ([]map[string]interface{}, erro
 
 		row := make(map[string]interface{})
 
-		for i, value := range responseColumns {
+		for i, value := range responsePointers {
 
 			param := params[i]
 			valueString := fmt.Sprintf("%s", value)
