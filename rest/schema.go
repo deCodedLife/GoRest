@@ -7,6 +7,7 @@ import (
 	. "github.com/deCodedLife/gorest/database"
 	. "github.com/deCodedLife/gorest/tool"
 	"github.com/gorilla/mux"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -25,6 +26,9 @@ var SCHEMAS []Schema
 func ParamsToQuery(s Schema, query url.Values) map[string]interface{} {
 	var uriParams = make(map[string]interface{})
 	for _, param := range s.Params {
+		if param.Type == "" {
+			continue
+		}
 		var valueExists bool
 		for variable := range query {
 			if variable == param.Article {
@@ -47,7 +51,7 @@ func ParamsToQuery(s Schema, query url.Values) map[string]interface{} {
 func ExtendObjects() {
 	for _, s := range SCHEMAS {
 		Handlers = append(Handlers, RestApi{
-			Path:   "serialized" + strings.Title(s.Title),
+			Path:   "serialized-" + s.Title,
 			Method: http.MethodGet,
 			Handler: func(w http.ResponseWriter, r *http.Request) {
 				defer func() {
@@ -120,6 +124,8 @@ func HandleRest(s Schema) {
 				defer func() {
 					recover()
 				}()
+				log.Println(ParamsToQuery(s, r.URL.Query()))
+				log.Println(s)
 				data, err := s.SELECT(ParamsToQuery(s, r.URL.Query()))
 				HandleError(err, CustomError{}.WebError(w, http.StatusInternalServerError, err))
 				SendData(w, 200, data)
