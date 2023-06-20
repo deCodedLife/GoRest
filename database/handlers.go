@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -213,6 +214,9 @@ func (s Schema) SELECT(d map[string]interface{}) ([]map[string]interface{}, erro
 		}
 
 		row := make(map[string]interface{})
+
+		log.Println(params)
+		log.Println(responsePointers)
 
 		for i, value := range responsePointers {
 
