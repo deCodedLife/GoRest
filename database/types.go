@@ -20,8 +20,9 @@ type SchemaParam struct {
 }
 
 type Schema struct {
-	Title   string        `json:"title"`
-	Table   string        `json:"table"`
-	Methods []string      `json:"methods"`
-	Params  []SchemaParam `json:"params"`
+	Title       string        `json:"title"`
+	Table       string        `json:"table"`
+	Methods     []string      `json:"methods"`
+	Params      []SchemaParam `json:"params"`
+	ParamsCount int           `json:"paramsCount"`
 }

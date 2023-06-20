@@ -40,12 +40,14 @@ func (db *DBConfigs) Init() {
 func (s Schema) InitTable() {
 	var additional = ""
 	var query = ""
+	s.ParamsCount = 0
 
 	for _, param := range s.Params {
 		if param.Type == "" {
 			continue
 		}
 
+		s.ParamsCount++
 		query += fmt.Sprintf("`%s` ", param.Article)
 		query += param.Type + " "
 
@@ -158,8 +160,8 @@ func (s Schema) INSERT(d map[string]interface{}) (int64, error) {
 
 func (s Schema) SELECT(d map[string]interface{}) ([]map[string]interface{}, error) {
 	var response []map[string]interface{}
-	var responsePointers = make([]interface{}, len(s.Params))
-	var responseColumns = make([]interface{}, len(s.Params))
+	var responsePointers = make([]interface{}, s.ParamsCount)
+	var responseColumns = make([]interface{}, s.ParamsCount)
 	var whereClauses = "WHERE "
 
 	for index, param := range s.Params {
