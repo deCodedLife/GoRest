@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	. "github.com/deCodedLife/gorest/database"
-	. "github.com/deCodedLife/gorest/tool"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
@@ -15,6 +13,9 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+
+	. "ouralbum/gorest/database"
+	. "ouralbum/gorest/tool"
 )
 
 type SchemaStructure struct {

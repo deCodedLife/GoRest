@@ -1,10 +1,11 @@
 package main
 
 import (
-	. "github.com/deCodedLife/gorest/rest"
-	. "github.com/deCodedLife/gorest/tool"
 	"github.com/gorilla/mux"
 	"net/http"
+
+	. "ouralbum/gorest/rest"
+	. "ouralbum/gorest/tool"
 )
 
 func main() {
