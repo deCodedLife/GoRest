@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strconv"
 	"strings"
 )
@@ -26,16 +27,21 @@ var SCHEMAS []Schema
 func ParamsToQuery(s Schema, query url.Values) map[string]interface{} {
 	var uriParams = make(map[string]interface{})
 	for _, param := range s.Params {
-		if param.Type == "" {
-			continue
-		}
 		var valueExists bool
 		for variable := range query {
 			if variable == param.Article {
+				valueRef := reflect.ValueOf(param)
+				field := valueRef.FieldByName("Type")
+
+				if field.IsValid() == false {
+					continue
+				}
+
 				value := query.Get(variable)
 				if value == "" {
 					break
 				}
+
 				valueExists = true
 				break
 			}

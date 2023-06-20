@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -44,7 +45,10 @@ func (s *Schema) InitTable() {
 	(*s).ParamsCount = 0
 
 	for _, param := range s.Params {
-		if param.Type == "" {
+		value := reflect.ValueOf(param)
+		field := value.FieldByName("Type")
+
+		if field.IsValid() == false {
 			continue
 		}
 
@@ -109,8 +113,10 @@ func (s Schema) INSERT(d map[string]interface{}) (int64, error) {
 	var values = ""
 
 	for _, param := range s.Params {
+		value := reflect.ValueOf(param)
+		field := value.FieldByName("Type")
 
-		if param.Type == "" {
+		if field.IsValid() == false {
 			continue
 		}
 
@@ -168,8 +174,10 @@ func (s Schema) SELECT(d map[string]interface{}) ([]map[string]interface{}, erro
 	var whereClauses = "WHERE "
 
 	for index, param := range s.Params {
+		value := reflect.ValueOf(param)
+		field := value.FieldByName("Type")
 
-		if param.Type == "" {
+		if field.IsValid() == false {
 			continue
 		}
 
@@ -273,8 +281,10 @@ func (s Schema) UPDATE(id int, d map[string]interface{}) (map[string]interface{}
 	var setClause = ""
 
 	for _, param := range s.Params {
+		value := reflect.ValueOf(param)
+		field := value.FieldByName("Type")
 
-		if param.Type == "" {
+		if field.IsValid() == false {
 			continue
 		}
 
