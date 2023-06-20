@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 
@@ -30,7 +30,7 @@ func InitDatabase() {
 }
 
 func (db *DBConfigs) Init() {
-	byteText, err := ioutil.ReadFile(DBConfigFile)
+	byteText, err := os.ReadFile(DBConfigFile)
 	HandleError(err, CustomError{}.Unexpected(err))
 
 	err = json.Unmarshal(byteText, &db)
@@ -208,9 +208,17 @@ func (s Schema) SELECT(d map[string]interface{}) ([]map[string]interface{}, erro
 
 		for i, value := range responsePointers {
 
+			index := i
 			valueString := fmt.Sprintf("%s", value)
 
-			if len(valueString) == 1 && s.Params[i].IsNumeric() {
+			for j := i; j < len(s.Params); j++ {
+				if s.Params[j].Type != "" {
+					index = j
+					break
+				}
+			}
+
+			if len(valueString) == 1 && s.Params[index].IsNumeric() {
 				valueString = fmt.Sprintf("%d", value)
 				valueString = valueString[1 : len(valueString)-1]
 
@@ -219,16 +227,16 @@ func (s Schema) SELECT(d map[string]interface{}) ([]map[string]interface{}, erro
 					return nil, err
 				}
 
-				column[s.Params[i].Article] = statement != 0
+				column[s.Params[index].Article] = statement != 0
 				continue
 			}
 
-			if s.Params[i].IsNumeric() {
-				column[s.Params[i].Article] = value
+			if s.Params[index].IsNumeric() {
+				column[s.Params[index].Article] = value
 				continue
 			}
 
-			column[s.Params[i].Article] = valueString
+			column[s.Params[index].Article] = valueString
 		}
 
 		response = append(response, column)

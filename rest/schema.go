@@ -47,7 +47,7 @@ func ParamsToQuery(s Schema, query url.Values) map[string]interface{} {
 func ExtendObjects() {
 	for _, s := range SCHEMAS {
 		Handlers = append(Handlers, RestApi{
-			Path:   "serialized" + strings.ToTitle(s.Table),
+			Path:   "serialized" + strings.Title(s.Title),
 			Method: http.MethodGet,
 			Handler: func(w http.ResponseWriter, r *http.Request) {
 				defer func() {
