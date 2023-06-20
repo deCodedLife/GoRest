@@ -208,15 +208,8 @@ func (s Schema) SELECT(d map[string]interface{}) ([]map[string]interface{}, erro
 
 		for i, value := range responsePointers {
 
-			index := i
+			index := nextParam(s, i)
 			valueString := fmt.Sprintf("%s", value)
-
-			for j := i; j < len(s.Params); j++ {
-				if s.Params[j].Type != "" {
-					index = j
-					break
-				}
-			}
 
 			if len(valueString) == 1 && s.Params[index].IsNumeric() {
 				valueString = fmt.Sprintf("%d", value)
@@ -247,6 +240,13 @@ func (s Schema) SELECT(d map[string]interface{}) ([]map[string]interface{}, erro
 	}
 
 	return response, nil
+}
+
+func nextParam(s Schema, index int) int {
+	if s.Params[index].Type == "" {
+		return nextParam(s, index+1)
+	}
+	return index
 }
 
 func (s Schema) UPDATE(id int, d map[string]interface{}) (map[string]interface{}, error) {
