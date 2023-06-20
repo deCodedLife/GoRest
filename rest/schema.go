@@ -7,7 +7,6 @@ import (
 	. "github.com/deCodedLife/gorest/database"
 	. "github.com/deCodedLife/gorest/tool"
 	"github.com/gorilla/mux"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -124,8 +123,6 @@ func HandleRest(s Schema) {
 				defer func() {
 					recover()
 				}()
-				log.Println(ParamsToQuery(s, r.URL.Query()))
-				log.Println(s)
 				data, err := s.SELECT(ParamsToQuery(s, r.URL.Query()))
 				HandleError(err, CustomError{}.WebError(w, http.StatusInternalServerError, err))
 				SendData(w, 200, data)

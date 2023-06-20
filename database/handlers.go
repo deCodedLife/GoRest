@@ -37,17 +37,17 @@ func (db *DBConfigs) Init() {
 	HandleError(err, CustomError{}.Unexpected(err))
 }
 
-func (s Schema) InitTable() {
+func (s *Schema) InitTable() {
 	var additional = ""
 	var query = ""
-	s.ParamsCount = 0
+	(*s).ParamsCount = 0
 
 	for _, param := range s.Params {
 		if param.Type == "" {
 			continue
 		}
 
-		s.ParamsCount++
+		(*s).ParamsCount++
 		query += fmt.Sprintf("`%s` ", param.Article)
 		query += param.Type + " "
 
